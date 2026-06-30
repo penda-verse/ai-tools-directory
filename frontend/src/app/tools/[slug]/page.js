@@ -2,20 +2,27 @@ import Link from 'next/link';
 import AdSensePlaceholder from '@/components/AdSensePlaceholder';
 import ToolPlayground from '@/components/ToolPlayground';
 
+import toolsData from '@/data/tools.json';
+
+export async function generateStaticParams() {
+  return toolsData.map((tool) => ({
+    slug: tool.slug,
+  }));
+}
+
 // Generate dynamic metadata for search engine optimization
 export async function generateMetadata(props) {
   const params = await props.params;
   const slug = params.slug;
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/tools/${slug}`);
-    if (!res.ok) {
+    const tool = toolsData.find(t => t.slug === slug);
+    if (!tool) {
       return {
         title: 'Tool Not Found - AI Tools Directory',
         description: 'The requested AI tool could not be found.'
       };
     }
-    const tool = await res.json();
     return {
       title: `${tool.name} - AI Business Tool Details, Pricing & Reviews`,
       description: tool.short_description,
@@ -35,14 +42,10 @@ export async function generateMetadata(props) {
 }
 
 async function getTool(slug) {
-  const res = await fetch(`http://127.0.0.1:8000/api/v1/tools/${slug}`, {
-    next: { revalidate: 60 }
-  });
-  if (!res.ok) {
-    return null;
-  }
-  return res.json();
+  const tool = toolsData.find(t => t.slug === slug);
+  return tool || null;
 }
+
 
 export default async function ToolDetail(props) {
   const params = await props.params;

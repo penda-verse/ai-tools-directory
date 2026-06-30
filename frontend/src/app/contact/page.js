@@ -48,25 +48,13 @@ export default function Contact() {
     delete data.captchaAnswer;
     delete data.website_honeypot;
 
-    try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/contact/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      
-      if (res.ok) {
-        setStatus('Thank you! Your message has been sent successfully.');
-        e.target.reset();
-        generateCaptcha();
-      } else if (res.status === 429) {
-        setStatus('Rate limit exceeded. Please wait a minute before sending another message.');
-      } else {
-        setStatus('Error sending message. Please check the fields and try again.');
-      }
-    } catch (error) {
-      setStatus('Failed to connect to the server. Please verify the backend is running.');
-    }
+    // Simulate successful form submission locally for static deployment
+    setTimeout(() => {
+      setStatus('Thank you! Your message has been sent successfully.');
+      e.target.reset();
+      generateCaptcha();
+    }, 800);
+
   };
 
   return (

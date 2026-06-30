@@ -1,37 +1,37 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import ToolCard from '@/components/ToolCard';
 import SearchBar from '@/components/SearchBar';
 import AdSensePlaceholder from '@/components/AdSensePlaceholder';
 import Link from 'next/link';
+import toolsData from '@/data/tools.json';
 
-async function getTools(search = '', category = '') {
-  try {
-    const url = new URL('http://127.0.0.1:8000/api/v1/tools/');
-    if (search) url.searchParams.append('search', search);
-    if (category) url.searchParams.append('category', category);
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const search = searchParams.get('search') || '';
+  const activeCategory = searchParams.get('category') || '';
 
-    const res = await fetch(url.toString(), {
-      next: { revalidate: 60 }
-    });
-    if (!res.ok) return [];
-    return res.json();
-  } catch (error) {
-    console.error("Failed to fetch tools:", error);
-    return [];
+  // Filter tools client-side
+  let tools = [...toolsData];
+  if (activeCategory) {
+    tools = tools.filter(tool => tool.category.toLowerCase() === activeCategory.toLowerCase());
   }
-}
-
-export default async function Home(props) {
-  const searchParams = await props.searchParams;
-  const search = searchParams?.search || '';
-  const activeCategory = searchParams?.category || '';
-
-  const tools = await getTools(search, activeCategory);
+  if (search) {
+    const term = search.toLowerCase();
+    tools = tools.filter(tool => 
+      tool.name.toLowerCase().includes(term) || 
+      tool.short_description.toLowerCase().includes(term) || 
+      tool.description.toLowerCase().includes(term)
+    );
+  }
 
   const categories = [
     { name: 'All Tools', value: '' },
     { name: 'Productivity', value: 'Productivity' },
     { name: 'Marketing', value: 'Marketing' },
-    { name: 'Design & Video', value: 'Design' }, // Database uses 'Design'
+    { name: 'Design & Video', value: 'Design' },
     { name: 'Development', value: 'Development' },
     { name: 'Automation', value: 'Automation' },
     { name: 'Finance', value: 'Finance' },
@@ -63,7 +63,6 @@ export default async function Home(props) {
           <h2 className="text-xl font-bold text-white mb-4">Browse Categories</h2>
           <div className="flex flex-wrap gap-2 md:gap-3">
             {categories.map((cat) => {
-              // Maintain search query if active
               const href = cat.value 
                 ? `/?category=${cat.value}${search ? `&search=${search}` : ''}`
                 : `/${search ? `?search=${search}` : ''}`;
@@ -133,5 +132,13 @@ export default async function Home(props) {
 
       <AdSensePlaceholder slot="home-footer" />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="text-center py-20 text-gray-400">Loading tools...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
